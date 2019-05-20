@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -9,24 +7,26 @@ namespace CourseProject
 {
     class Resolution
     {
-        View view = new View();
+        public Resolution()
+        {
+            this.view = new View(this);
+        }
+        View view;
         Calculation calc = new Calculation();
         List<Task> tasksArray = new List<Task>();
 
-        int threadCount = 4; 
-        int taskNumber = 0;
         double x = 0;
         double t = 0;
         const int pointsX = 15;
-        const int pointsT = 5000;
-        double stepX = 1d / pointsX;
-        double stepT = 1d / pointsT;
+        const int pointsT = 3500;
+        const double stepX = 1d / pointsX;
+        const double stepT = 1d / pointsT;
         public double[,] exactResolution = new double[pointsT, pointsX];
         public double[,] aproximateResolution = new double[pointsT, pointsX];
         public double[,] exactResolutionParallel = new double[pointsT, pointsX];
         public double[,] aproximateResolutionParallel = new double[pointsT, pointsX];
 
-        public int GetxPoints
+        public int GetXPoints
         {
             get { return pointsX; }
         }
@@ -82,18 +82,25 @@ namespace CourseProject
                 }
 
             }
-            Console.WriteLine();
-            view.Writer("C:/Users/Eugene/Desktop/gradual_1.txt", aproximateResolution);
-            view.Writer("C:/Users/Eugene/Desktop/gradual_2.txt", exactResolution);
+            view.Writer("C:/Users/Eugene/Desktop/CourseProject/gradual_1.txt", aproximateResolution);
+            view.Writer("C:/Users/Eugene/Desktop/CourseProject/gradual_2.txt", exactResolution);
         }
 
-        public async void calculateParallel()
+        public  void calculateParallel()
         {
-            for (int i = 0; i < threadCount; i++)
+            t = 0d;
+            for (int i = 0; i < pointsT; i++)
             {
-                tasksArray.Add(Task.Factory.StartNew(delegate () { exactResParallel(taskNumber++); }));
+                x = 0d;
+                Parallel.For(0, pointsX, (int j) =>
+                    {
+                        exactResolution[i, j] = calc.exactResolution(x, t);
+                        x += stepX;
+                    }
+                );
+                t += stepT;
             }
-            await Task.WhenAll(tasksArray);
+
             Parallel.For(0, pointsX, (int i) =>
             {
                 double xLocal = stepX * i;
@@ -107,34 +114,7 @@ namespace CourseProject
             });
             aproximateResParallel();
 
-            view.Writer("C:/Users/Eugene/Desktop/parallel_1.txt", aproximateResolutionParallel);
-            view.Writer("C:/Users/Eugene/Desktop/parallel_2.txt", exactResolutionParallel);
-        }
-
-        public void exactResParallel(int taskNumber)
-        {
-            int startIndex = taskNumber * (pointsT / threadCount);
-            int endIndex;
-            if (taskNumber == threadCount - 1)
-            {
-                endIndex = pointsT;
-            }
-            else
-            {
-                endIndex = startIndex + pointsT / threadCount;
-            }
-            double tLocal = (double)startIndex / pointsT;
-            double xLocal;
-            for (int k = startIndex; k < endIndex; k++)
-            {
-                xLocal = 0d;
-                for (int i = 0; i < pointsX; i++)
-                {
-                    Interlocked.Exchange(ref exactResolutionParallel[k, i], calc.exactResolution(xLocal, tLocal));
-                    xLocal += stepX;
-                }
-                tLocal += stepT;
-            }
+            view.Writer("C:/Users/Eugene/Desktop/CourseProject/parallel_1.txt", aproximateResolutionParallel);
         }
 
         public void aproximateResParallel()

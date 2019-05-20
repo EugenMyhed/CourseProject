@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
-using System.Threading.Tasks;
-using static System.Math;
 namespace CourseProject
 {
     class Program
@@ -11,30 +8,28 @@ namespace CourseProject
         static Stopwatch stopwatch = new Stopwatch();
         static void Main(string[] args)
         {
-            System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
+            Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
 
+            ErrorCalculation errors = new ErrorCalculation();
             Resolution resolution = new Resolution();
+
             double absoluteError;
             double relativeError;
-            Errors errors = new Errors();
-            View view = new View();
+          
             stopwatch.Start();
             resolution.gradualCalculation();
             stopwatch.Stop();
-            Console.WriteLine(stopwatch.ElapsedMilliseconds);
+            Console.WriteLine("Gradual: " + stopwatch.ElapsedMilliseconds);
             stopwatch.Reset();
             stopwatch.Start();
             resolution.calculateParallel();
             resolution.aproximateResParallel();
             stopwatch.Stop();
-            Console.WriteLine(stopwatch.ElapsedMilliseconds);
-            absoluteError = errors.CalculateAbsoluteError(resolution.exactResolution,
-                                                        resolution.aproximateResolution,
-                                                        resolution.GetxPoints,
-                                                        resolution.GetTPoints);
-            relativeError = errors.CalculateRelativeError(resolution.exactResolution);
-            Console.WriteLine(absoluteError);
-            Console.WriteLine(relativeError);
+            Console.WriteLine("Parallel: " + stopwatch.ElapsedMilliseconds);
+            absoluteError = errors.absoluteError(resolution.exactResolution, resolution.aproximateResolution);
+            relativeError = errors.relativeError(resolution.exactResolution);
+            Console.WriteLine("Absolute error: " + absoluteError);
+            Console.WriteLine("Relative error: " + relativeError);
             Console.ReadKey();
         }
     }
